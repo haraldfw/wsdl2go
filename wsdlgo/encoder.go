@@ -669,7 +669,7 @@ func (ge *goEncoder) writeSOAPFunc(w io.Writer, d *wsdl.Definitions, op *wsdl.Op
 		rpcStyle = d.Binding.BindingType.Style == "rpc"
 	}
 
-	ge.needsExtPkg["github.com/fiorix/wsdl2go/soap"] = true
+	ge.needsExtPkg["github.com/haraldfw/wsdl2go/soap"] = true
 
 	// inputNames describe the accessors to the input parameter names
 	inputNames := make([]string, len(in))
