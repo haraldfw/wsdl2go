@@ -2,6 +2,7 @@ package main
 
 import (
 	"crypto/tls"
+	"encoding/base64"
 	"flag"
 	"fmt"
 	"io"
@@ -10,8 +11,8 @@ import (
 	"net/url"
 	"os"
 
-	"github.com/fiorix/wsdl2go/wsdl"
-	"github.com/fiorix/wsdl2go/wsdlgo"
+	"github.com/haraldfw/wsdl2go/wsdl"
+	"github.com/haraldfw/wsdl2go/wsdlgo"
 )
 
 var version = "tip"
@@ -25,6 +26,7 @@ type options struct {
 	ClientCertFile string
 	ClientKeyFile  string
 	Version        bool
+	BasicAuth      string
 }
 
 func main() {
@@ -38,6 +40,7 @@ func main() {
 	flag.StringVar(&opts.ClientCertFile, "cert", opts.ClientCertFile, "use client TLS cert file")
 	flag.StringVar(&opts.ClientKeyFile, "key", opts.ClientKeyFile, "use client TLS key file")
 	flag.BoolVar(&opts.Version, "version", opts.Version, "show version and exit")
+	flag.StringVar(&opts.BasicAuth, "bauth", opts.BasicAuth, "use basic auth on remote imports")
 	flag.Parse()
 	if opts.Version {
 		fmt.Printf("wsdl2go %s\n", version)
@@ -56,7 +59,7 @@ func main() {
 		w = f
 	}
 
-	cli := httpClient(opts.Insecure, opts.ClientCertFile, opts.ClientKeyFile)
+	cli := httpClient(opts.Insecure, opts.ClientCertFile, opts.ClientKeyFile, opts.BasicAuth)
 
 	err := codegen(w, opts, cli)
 	if err != nil {
@@ -78,7 +81,7 @@ func codegen(w io.Writer, opts options, cli *http.Client) error {
 	}
 	f.Close()
 
-	enc := wsdlgo.NewEncoder(w)
+	enc := wsdlgo.NewEncoder(w, base64.StdEncoding.EncodeToString([]byte(opts.BasicAuth)))
 	enc.SetClient(cli)
 	if opts.Package != "" {
 		enc.SetPackageName(wsdlgo.PackageName(opts.Package))
@@ -103,7 +106,7 @@ func open(name string, cli *http.Client) (io.ReadCloser, error) {
 }
 
 // httpClient returns http client with default options
-func httpClient(insecure bool, clientCertPath, clientKeyPath string) *http.Client {
+func httpClient(insecure bool, clientCertPath, clientKeyPath string, clientAuth string) *http.Client {
 	tlsConfig := &tls.Config{InsecureSkipVerify: insecure}
 
 	if clientCertPath != "" && clientKeyPath != "" {

@@ -24,7 +24,7 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/fiorix/wsdl2go/wsdl"
+	"github.com/haraldfw/wsdl2go/wsdl"
 )
 
 // An Encoder generates Go code from WSDL definitions.
@@ -85,10 +85,12 @@ type goEncoder struct {
 
 	// localNamespace allows overriding of namespace in XMLName
 	localNamespace string
+
+	bauth string
 }
 
 // NewEncoder creates and initializes an Encoder that generates code to w.
-func NewEncoder(w io.Writer) Encoder {
+func NewEncoder(w io.Writer, bauth string) Encoder {
 	return &goEncoder{
 		w:               w,
 		http:            http.DefaultClient,
@@ -102,6 +104,7 @@ func NewEncoder(w io.Writer) Encoder {
 		needsStdPkg:     make(map[string]bool),
 		needsExtPkg:     make(map[string]bool),
 		importedSchemas: make(map[string]bool),
+		bauth:           bauth,
 	}
 }
 
@@ -324,7 +327,14 @@ func (ge *goEncoder) importRemote(loc string, v interface{}) error {
 	var r io.Reader
 	switch u.Scheme {
 	case "http", "https":
-		resp, err := ge.http.Get(loc)
+		req, err := http.NewRequest("GET", loc, nil)
+		if err != nil {
+			return err
+		}
+		if ge.bauth != "" {
+			req.Header.Add("Authorization", "Basic "+ge.bauth)
+		}
+		resp, err := ge.http.Do(req)
 		if err != nil {
 			return err
 		}
