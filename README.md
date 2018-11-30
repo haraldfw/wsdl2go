@@ -9,7 +9,7 @@ from [WSDL](https://en.wikipedia.org/wiki/Web_Services_Description_Language).
 Download:
 
 ```
-go get github.com/fiorix/wsdl2go
+go get github.com/haraldfw/wsdl2go
 ```
 
 ### Usage
@@ -43,7 +43,7 @@ Example:
 import (
 	"/path/to/generated/example"
 
-	"github.com/fiorix/wsdl2go/soap"
+	"github.com/haraldfw/wsdl2go/soap"
 )
 
 func main() {
